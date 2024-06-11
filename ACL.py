@@ -4,6 +4,7 @@ import subprocess
 import os
 import re
 from CTkMessagebox import CTkMessagebox
+from tkinter import filedialog
 
 
 class ACLManager:
@@ -273,7 +274,7 @@ class ACLManager:
                 self.rules_listbox.insert(tk.END, f"Errore durante l'esecuzione del comando: {str(e)}")
 
     def update_dir(self):    
-        dir = os.path.expanduser("~/Scrivania/projreggio")
+        dir = self.dir_selezionata
         user = self.entry_user.get()
         try:
                 if self.perm_choice.get()==1:
@@ -346,7 +347,7 @@ class ACLManager:
 
     def rm_def(self):
         
-        dir = os.path.expanduser("~/Scrivania/projreggio")
+        dir = self.dir_selezionata
         command = ["setfacl","-k",dir]
         try:
             result = subprocess.run(command, capture_output=True, text=True)
@@ -372,7 +373,8 @@ class ACLManager:
 
 
     def print_dir(self):
-        dir = os.path.expanduser("~/Scrivania/projreggio") 
+        dir = self.dir_selezionata
+        print(dir)
         try:
             command = ["getfacl", dir]
             result = subprocess.run(command, capture_output=True, text=True)
@@ -391,6 +393,30 @@ class ACLManager:
         except Exception as e:
             self.rules_listbox.insert(tk.END, f"Errore durante l'esecuzione del comando: {str(e)}")
 
+    def seleziona_dir(self):
+        self.dir_selezionata = filedialog.askdirectory()
+        if self.dir_selezionata:
+            print("Directory selezionata:", self.dir_selezionata)
+            self.select_dir.configure(text=f"Directory selezionata: {self.dir_selezionata}")
+            #return self.dir_selezionata
+        
+    def mostra_file(self):
+        dir = self.dir_selezionata
+        try:
+            file_list = os.listdir(dir)
+            if file_list:
+                self.file_combobox.configure(values=file_list)
+                self.file_combobox.set(file_list[0])
+            else:
+                self.file_combobox.configure(values=["Nessun file trovato"])
+                self.file_combobox.set(file_list[0])
+
+        except Exception as e:
+            self.file_combobox.configure(values=[f"Errore : {str(e)}"])
+            self.file_combobox.set(f"Errore: {str(e)}")
+        
+    
+
     def setup_ui(self):
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("green")
@@ -399,81 +425,88 @@ class ACLManager:
         frame.pack(pady=20)
 
         label_file = ctk.CTkLabel(frame, text="Scegli un file:")
-        label_file.grid(row=0, column=0, padx=5, pady=5)
+        label_file.grid(row=1, column=0, padx=5, pady=5)
 
-        current_files = os.listdir('.')
-        self.file_combobox = ctk.CTkComboBox(frame, values=current_files, width=200)
-        self.file_combobox.grid(row=0, column=1, padx=5, pady=5)
+        #current_files = os.listdir('.')
+        self.file_combobox = ctk.CTkComboBox(frame, values=["Nessun file selezionato"], width=200)
+        self.file_combobox.grid(row=1, column=1, padx=5, pady=5)
 
         cnf_file = ctk.CTkButton(frame, text="Visualizza permessi:", command=self.print_acl)
-        cnf_file.grid(row=0, column=2, padx=5, pady=10)
+        cnf_file.grid(row=1, column=2, padx=5, pady=10)
 
-        btn_file = ctk.CTkButton(frame, text="Scegli file:",command=self.select_file)
-        btn_file.grid(row=0, column=3 ,padx=5, pady=10)
+        btn_file = ctk.CTkButton(frame, text="Trova file:",command=self.mostra_file)
+        btn_file.grid(row=1, column=3 ,padx=5, pady=10)
 
 
         label_user = ctk.CTkLabel(frame , text="Seleziona Utente:")
-        label_user.grid(row=1, column=0, padx=5, pady=5)
+        label_user.grid(row=2, column=0, padx=5, pady=5)
 
         self.entry_user = ctk.CTkEntry(frame, width=200)
-        self.entry_user.grid(row=1, column=1, padx=5, pady=5)
+        self.entry_user.grid(row=2, column=1, padx=5, pady=5)
 
         btn_user = ctk.CTkButton(frame, text="Seleziona", command=self.select_user)
-        btn_user.grid(row=1, column=3, padx=5, pady=10)
+        btn_user.grid(row=2, column=3, padx=5, pady=10)
 
 
         label_group = ctk.CTkLabel(frame , text="Seleziona Gruppo:")
-        label_group.grid(row=2, column=0, padx=5, pady=5)
+        label_group.grid(row=3, column=0, padx=5, pady=5)
 
         self.entry_group = ctk.CTkEntry(frame, width=200)
-        self.entry_group.grid(row=2, column=1, padx=5, pady=5)
+        self.entry_group.grid(row=3, column=1, padx=5, pady=5)
 
         btn_group = ctk.CTkButton(frame, text="Seleziona", command=self.select_group)
-        btn_group.grid(row=2, column=3, padx=5, pady=10)
+        btn_group.grid(row=3, column=3, padx=5, pady=10)
 
         self.perm_choice = tk.IntVar(value=0)  
 
         label_perm = ctk.CTkLabel(frame, text="Imposta permessi:")
-        label_perm.grid(row=3, column=0, padx=5, pady=5)
+        label_perm.grid(row=4, column=0, padx=5, pady=5)
 
         perm_read = ctk.CTkRadioButton(frame, text="Lettura", variable=self.perm_choice, value=1)
-        perm_read.grid(row=3, column=1, padx=5, pady=5)
+        perm_read.grid(row=4, column=1, padx=5, pady=5)
 
         perm_write = ctk.CTkRadioButton(frame, text="Scrittura", variable=self.perm_choice, value=2)
-        perm_write.grid(row=3, column=2, padx=5, pady=5)
+        perm_write.grid(row=4, column=2, padx=5, pady=5)
 
         perm_exec = ctk.CTkRadioButton(frame, text="Esecuzione", variable=self.perm_choice, value=3)
-        perm_exec.grid(row=3, column=3, padx=5, pady=5)
+        perm_exec.grid(row=4, column=3, padx=5, pady=5)
 
         tot_perm = ctk.CTkRadioButton (frame, text="Imposta tutti", variable=self.perm_choice, value=4)
-        tot_perm.grid(row=3, column=4, padx=5, pady=5)
+        tot_perm.grid(row=4, column=4, padx=5, pady=5)
 
         rim_perm = ctk.CTkRadioButton (frame, text="Rimuovi", variable=self.perm_choice, value=5)
-        rim_perm.grid(row=3, column=5, padx=5, pady=5)
+        rim_perm.grid(row=4, column=5, padx=5, pady=5)
 
         apply_btn = ctk.CTkButton(frame, text="Applica Permesso Utente", command=self.update_permissions)
-        apply_btn.grid(row=5, column=1,columnspan=2, padx=5, pady=10)
+        apply_btn.grid(row=6, column=1,columnspan=2, padx=5, pady=10)
 
         mask_btn = ctk.CTkButton(frame,text="Applica Permesso Maschera", command=self.update_mask)
-        mask_btn.grid(row=5, column=2,columnspan=2,padx=5, pady=10)
+        mask_btn.grid(row=6, column=2,columnspan=2,padx=5, pady=10)
 
         grp_btn = ctk.CTkButton(frame,text="Applica Permesso Gruppo", command=self.update_group)
-        grp_btn.grid(row=5, column=3,columnspan=3,padx=5, pady=10)
+        grp_btn.grid(row=6, column=3,columnspan=3,padx=5, pady=10)
 
         dir_btn = ctk.CTkButton(frame, text="Modifica Permessi Current Directory", command=self.update_dir)
-        dir_btn.grid(row=6,column=1,columnspan=1,padx=5,pady=10)
+        dir_btn.grid(row=7,column=1,columnspan=1,padx=5,pady=10)
 
         rm_btn= ctk.CTkButton(frame, text="Rimuovere Permesso Default Current Directory",command=self.rm_def)
-        rm_btn.grid(row=6,column=2,columnspan=2,padx=5,pady=10)
+        rm_btn.grid(row=7,column=2,columnspan=2,padx=5,pady=10)
 
         mst_btn= ctk.CTkButton(frame, text="Mostra Permessi Current Directory",command=self.print_dir)
-        mst_btn.grid(row=6,column=4,columnspan=3,padx=5,pady=10)
+        mst_btn.grid(row=7,column=4,columnspan=3,padx=5,pady=10)
 
         #rec_btn= ctk.CTkButton(frame, text="Gestione Ricorsiva ACL",command=self.update_rec)
         #rec_btn.grid(row=7,column=1,columnspan=2,padx=5,pady=10)
 
         stp_btn= ctk.CTkButton(frame, text="Stampa comandi eseguiti",command=self.stmp_command)
-        stp_btn.grid(row=7,column=2 ,columnspan=2,padx=5,pady=10)
+        stp_btn.grid(row=8,column=2 ,columnspan=2,padx=5,pady=10)
+
+        #dir_selezionata = filedialog.askdirectory()
+        self.select_dir = ctk.CTkLabel(frame, text="Nessuna directory selezionata")
+        self.select_dir.grid(row=9,column=1,padx=5,pady=5)
+
+        self.btn_select= ctk.CTkButton(frame, text="Seleziona Directory",command=self.seleziona_dir)
+        self.btn_select.grid(row=9,column=3,padx=5,pady=5)
 
         self.rules_listbox = tk.Listbox(self.root, height=15, width=80)
         self.rules_listbox.pack(pady=20)
