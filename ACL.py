@@ -272,8 +272,8 @@ class ACLManager:
             except Exception as e:
                 self.rules_listbox.insert(tk.END, f"Errore durante l'esecuzione del comando: {str(e)}")
 
-    def update_dir(self):
-        dir = "/Scrivania/projreggio"
+    def update_dir(self):    
+        dir = os.path.expanduser("~/Scrivania/projreggio")
         user = self.entry_user.get()
         try:
                 if self.perm_choice.get()==1:
@@ -345,7 +345,8 @@ class ACLManager:
                 self.rules_listbox.insert(tk.END, f"Errore durante l'esecuzione del comando: {str(e)}")
 
     def rm_def(self):
-        dir = "/Scrivania/projreggio"
+        
+        dir = os.path.expanduser("~/Scrivania/projreggio")
         command = ["setfacl","-k",dir]
         try:
             result = subprocess.run(command, capture_output=True, text=True)
@@ -368,6 +369,27 @@ class ACLManager:
         for c in commands:
             self.rules_listbox.insert(tk.END, c)
             print(" ".join(c))
+
+
+    def print_dir(self):
+        dir = os.path.expanduser("~/Scrivania/projreggio") 
+        try:
+            command = ["getfacl", dir]
+            result = subprocess.run(command, capture_output=True, text=True)
+            self.h_command.append(command)
+            print(self.h_command)
+            output = result.stdout
+
+            if result.returncode == 0:
+                self.rules_listbox.delete(0, tk.END)
+            
+                for line in output.splitlines():
+                    self.rules_listbox.insert(tk.END, line)
+            else:
+                self.rules_listbox.insert(tk.END, f"Errore nell'esecuzione di getfacl: {result.stderr}")
+
+        except Exception as e:
+            self.rules_listbox.insert(tk.END, f"Errore durante l'esecuzione del comando: {str(e)}")
 
     def setup_ui(self):
         ctk.set_appearance_mode("dark")
@@ -439,10 +461,13 @@ class ACLManager:
         grp_btn.grid(row=5, column=3,columnspan=3,padx=5, pady=10)
 
         dir_btn = ctk.CTkButton(frame, text="Modifica Permessi Current Directory", command=self.update_dir)
-        dir_btn.grid(row=6,column=1,columnspan=2,padx=5,pady=10)
+        dir_btn.grid(row=6,column=1,columnspan=1,padx=5,pady=10)
 
         rm_btn= ctk.CTkButton(frame, text="Rimuovere Permesso Default Current Directory",command=self.rm_def)
-        rm_btn.grid(row=6,column=3,columnspan=2,padx=5,pady=10)
+        rm_btn.grid(row=6,column=2,columnspan=2,padx=5,pady=10)
+
+        mst_btn= ctk.CTkButton(frame, text="Mostra Permessi Current Directory",command=self.print_dir)
+        mst_btn.grid(row=6,column=4,columnspan=3,padx=5,pady=10)
 
         #rec_btn= ctk.CTkButton(frame, text="Gestione Ricorsiva ACL",command=self.update_rec)
         #rec_btn.grid(row=7,column=1,columnspan=2,padx=5,pady=10)
