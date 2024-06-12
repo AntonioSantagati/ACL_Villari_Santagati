@@ -403,7 +403,9 @@ class ACLManager:
     def mostra_file(self):
         dir = self.dir_selezionata
         try:
-            file_list = os.listdir(dir)
+            file_l = os.listdir(dir)
+            file_list=[f for f in file_l if os.path.isfile(os.path.join(dir, f))]
+
             if file_list:
                 self.file_combobox.configure(values=file_list)
                 self.file_combobox.set(file_list[0])
@@ -432,10 +434,10 @@ class ACLManager:
         self.file_combobox.grid(row=1, column=1, padx=5, pady=5)
 
         cnf_file = ctk.CTkButton(frame, text="Visualizza permessi:", command=self.print_acl)
-        cnf_file.grid(row=1, column=2, padx=5, pady=10)
+        cnf_file.grid(row=1, column=3, padx=5, pady=10)
 
         btn_file = ctk.CTkButton(frame, text="Trova file:",command=self.mostra_file)
-        btn_file.grid(row=1, column=3 ,padx=5, pady=10)
+        btn_file.grid(row=1, column=2 ,padx=5, pady=10)
 
 
         label_user = ctk.CTkLabel(frame , text="Seleziona Utente:")
@@ -463,19 +465,19 @@ class ACLManager:
         label_perm.grid(row=4, column=0, padx=5, pady=5)
 
         perm_read = ctk.CTkRadioButton(frame, text="Lettura", variable=self.perm_choice, value=1)
-        perm_read.grid(row=4, column=1, padx=5, pady=5)
+        perm_read.grid(row=4, column=1, padx=5, pady=5, sticky="n")
 
         perm_write = ctk.CTkRadioButton(frame, text="Scrittura", variable=self.perm_choice, value=2)
-        perm_write.grid(row=4, column=2, padx=5, pady=5)
+        perm_write.grid(row=4, column=2, padx=5, pady=5, sticky="ew")
 
         perm_exec = ctk.CTkRadioButton(frame, text="Esecuzione", variable=self.perm_choice, value=3)
-        perm_exec.grid(row=4, column=3, padx=5, pady=5)
+        perm_exec.grid(row=4, column=3, padx=5, pady=5, sticky="ew")
 
-        tot_perm = ctk.CTkRadioButton (frame, text="Imposta tutti", variable=self.perm_choice, value=4)
-        tot_perm.grid(row=4, column=4, padx=5, pady=5)
+        tot_perm = ctk.CTkRadioButton(frame, text="Imposta tutti", variable=self.perm_choice, value=4)
+        tot_perm.grid(row=4, column=4, padx=5, pady=5, sticky="ew")
 
-        rim_perm = ctk.CTkRadioButton (frame, text="Rimuovi", variable=self.perm_choice, value=5)
-        rim_perm.grid(row=4, column=5, padx=5, pady=5)
+        rim_perm = ctk.CTkRadioButton(frame, text="Rimuovi", variable=self.perm_choice, value=5)
+        rim_perm.grid(row=4, column=5, padx=5, pady=5, sticky="ew")
 
         apply_btn = ctk.CTkButton(frame, text="Applica Permesso Utente", command=self.update_permissions)
         apply_btn.grid(row=6, column=1,columnspan=2, padx=5, pady=10)
@@ -503,10 +505,10 @@ class ACLManager:
 
         #dir_selezionata = filedialog.askdirectory()
         self.select_dir = ctk.CTkLabel(frame, text="Nessuna directory selezionata")
-        self.select_dir.grid(row=9,column=1,padx=5,pady=5)
+        self.select_dir.grid(row=9,column=2,columnspan=2,padx=5,pady=5)
 
         self.btn_select= ctk.CTkButton(frame, text="Seleziona Directory",command=self.seleziona_dir)
-        self.btn_select.grid(row=9,column=3,padx=5,pady=5)
+        self.btn_select.grid(row=1,column=4,padx=5,pady=5)
 
         self.rules_listbox = tk.Listbox(self.root, height=15, width=80)
         self.rules_listbox.pack(pady=20)
