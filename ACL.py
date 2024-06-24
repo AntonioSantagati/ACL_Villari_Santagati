@@ -2,7 +2,6 @@ import customtkinter as ctk
 import tkinter as tk
 import subprocess
 import os
-import re
 from CTkMessagebox import CTkMessagebox
 from tkinter import filedialog
 
@@ -39,7 +38,7 @@ class ACLManager:
             self.rules_listbox.insert(tk.END, f"Errore durante l'esecuzione del comando: {str(e)}")
 
     def select_user(self):
-        user = self.entry_user.get()
+        user = self.user_combobox.get()
         print(user)
         return user
     
@@ -53,10 +52,10 @@ class ACLManager:
         print(group)
         return group
     
-    #User : antrunieddru,dio,pietro,giacomo
+    #User : anto
     def update_permissions(self):
         file = self.file_combobox.get()
-        user = self.entry_user.get()
+        user = self.user_combobox.get()
         if not file.strip():
             self.rules_listbox.insert(tk.END, "Seleziona un file valido.")
             return
@@ -275,7 +274,7 @@ class ACLManager:
 
     def update_dir(self):    
         dir = self.dir_selezionata
-        user = self.entry_user.get()
+        user = self.user_combobox.get()
         try:
                 if self.perm_choice.get()==1:
                     command = ["setfacl","-m",f"d:u:{user}:r--",dir]
@@ -416,6 +415,34 @@ class ACLManager:
         except Exception as e:
             self.file_combobox.configure(values=[f"Errore : {str(e)}"])
             self.file_combobox.set(f"Errore: {str(e)}")
+
+
+    
+
+    def fetch_users(self):
+        try:
+            command = ["getent", "passwd"]
+            result = subprocess.run(command, capture_output=True, text=True)
+            if result.returncode == 0:
+                output = result.stdout
+                users = []
+                for line in output.splitlines():
+                    parts = line.split(':')
+                    username = parts[0]
+                    uid = int(parts[2])
+                    if uid >= 1000:  # Consider only UIDs 1000 and above as non-system users
+                        users.append(username)
+                self.user_combobox.configure(values=users)
+                if users:
+                    self.user_combobox.set(users[0])
+            else:
+                self.rules_listbox.insert(tk.END, f"Errore nell'esecuzione di getent: {result.stderr}")
+        except Exception as e:
+            self.rules_listbox.insert(tk.END, f"Errore durante l'esecuzione del comando: {str(e)}")
+
+
+    
+    
         
     
 
@@ -440,14 +467,17 @@ class ACLManager:
         btn_file.grid(row=1, column=2 ,padx=5, pady=10)
 
 
-        label_user = ctk.CTkLabel(frame , text="Seleziona Utente:")
+        label_user = ctk.CTkLabel(frame , text="Seleziona un Utente:")
         label_user.grid(row=2, column=0, padx=5, pady=5)
 
-        self.entry_user = ctk.CTkEntry(frame, width=200)
-        self.entry_user.grid(row=2, column=1, padx=5, pady=5)
+        self.user_combobox = ctk.CTkComboBox(frame, values=["Nessun utente selezionato"], width=200)
+        self.user_combobox.grid(row=2, column=1, padx=5, pady=5)
 
-        btn_user = ctk.CTkButton(frame, text="Seleziona", command=self.select_user)
-        btn_user.grid(row=2, column=3, padx=5, pady=10)
+        btn_u = ctk.CTkButton(frame, text="Trova Utenti",command=self.fetch_users)
+        btn_u.grid(row=2, column=2 ,padx=5, pady=10)
+
+       # btn_user = ctk.CTkButton(frame, text="Seleziona", command=self.select_user)
+       # btn_user.grid(row=2, column=3, padx=5, pady=10)
 
 
         label_group = ctk.CTkLabel(frame , text="Seleziona Gruppo:")
